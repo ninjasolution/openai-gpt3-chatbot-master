@@ -1,0 +1,39 @@
+name: Test Application
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
+        pip3 install pyaudio --user
+        sudo apt-get install ffmpeg
+        pip3 install -e .
+    - name: Test with pytest
+      run: |
+        pytest
+    - name: Test Coverage
+      run: |
+        coverage run -m pytest
+        coverage report --fail-under=90 --include="gpt3_assistant/*"
+    - name: Linting
+      run: |
+        pylint --rcfile pylintrc --fail-under=9 gpt3_assistant
+        pylint --rcfile pylintrc --fail-under=6 tests
